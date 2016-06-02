@@ -57,8 +57,9 @@
     <Compile Include="Shared/Mock.fs" />
     <Compile Include="Shared/Server.fs" />
     <Compile Include="Shared/Styles.fs" />
-    <Compile Include="Formatters/Deedle.fs" />
-    <Compile Include="Formatters/XPlot.fs" />
+    <Compile Include="Html/Deedle.fs" />
+    <Compile Include="Html/XPlot.fs" />
+    <Compile Include="Text/FsLab.fs" />
     <Compile Include="Themes/DefaultWhite.fs" />
     <Compile Include="Themes/AtomChester.fs" />
     <None Include="paket.references" />
