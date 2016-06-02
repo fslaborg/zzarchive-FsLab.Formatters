@@ -59,7 +59,7 @@
     <Compile Include="Shared/Styles.fs" />
     <Compile Include="Html/Deedle.fs" />
     <Compile Include="Html/XPlot.fs" />
-    <Compile Include="Html/FsLab.fs" />
+    <Compile Include="Html/Text.fs" />
     <Compile Include="Text/FsLab.fs" />
     <Compile Include="Themes/DefaultWhite.fs" />
     <Compile Include="Themes/AtomChester.fs" />
