@@ -59,6 +59,8 @@
     <Compile Include="Shared/Styles.fs" />
     <Compile Include="Formatters/Deedle.fs" />
     <Compile Include="Formatters/XPlot.fs" />
+    <Compile Include="Themes/DefaultWhite.fs" />
+    <Compile Include="Themes/AtomChester.fs" />
     <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
