@@ -29,13 +29,13 @@ let private defaultStyles =
     "grid-column-counts", "3,3" ] |> dict
 
 
+#if HAS_FSI_ADDHTMLPRINTER
 /// Return value of a known style (or fail)
 let getStyle key = 
   match fsi.HtmlPrinterParameters.TryGetValue(key), defaultStyles.TryGetValue(key) with
   | (true, (:? string as s)), _ 
   | _, (true, s) -> s
   | _ -> failwith "Color not available"
-
 
 /// Replace '@name' with value for all known styles
 let replaceStyles style = 
@@ -52,3 +52,4 @@ let getNumberRange key =
   match (getStyle key).Split(',') with
   | [| lo; hi |] -> int lo, int hi
   | _ -> failwithf "Wrong numerical range for '%s'" key
+#endif

@@ -72,4 +72,8 @@ type SimpleServer() =
 // --------------------------------------------------------------------------------------
 
 let instance = Lazy.Create(fun () -> SimpleServer())
-fsi.HtmlPrinterParameters.["background-server"] <- System.Func<string, string>(fun s -> instance.Value.AddPage(s))
+
+#if HAS_FSI_ADDHTMLPRINTER
+fsi.HtmlPrinterParameters.["background-server"] <- 
+  System.Func<string, string>(fun s -> instance.Value.AddPage(s))
+#endif
