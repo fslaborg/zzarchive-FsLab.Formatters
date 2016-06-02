@@ -1,0 +1,6 @@
+.paket/paket.exe
+.paket/paket.targets
+packages
+*.suo
+src/bin
+src/obj
