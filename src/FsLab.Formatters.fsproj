@@ -20,7 +20,7 @@
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;HAS_FSI_ADDHTMLPRINTER</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\Debug\FsLab.Formatters.XML</DocumentationFile>
@@ -59,6 +59,7 @@
     <Compile Include="Shared/Styles.fs" />
     <Compile Include="Html/Deedle.fs" />
     <Compile Include="Html/XPlot.fs" />
+    <Compile Include="Html/FsLab.fs" />
     <Compile Include="Text/FsLab.fs" />
     <Compile Include="Themes/DefaultWhite.fs" />
     <Compile Include="Themes/AtomChester.fs" />
