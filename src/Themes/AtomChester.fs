@@ -1,5 +1,4 @@
-module FsLab.Formatters.Themes.AtomChester
-open FsLab.Formatters
+module FsLab.Formatters.AtomChesterTheme
 
 fsi.HtmlPrinterParameters.["background-color-highlighted"] <- "#2A333F"
 fsi.HtmlPrinterParameters.["background-color-alternate"] <- "#313C4A"

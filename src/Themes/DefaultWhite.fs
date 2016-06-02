@@ -1,5 +1,4 @@
-module FsLab.Formatters.Themes.DefaultWhite
-open FsLab.Formatters
+module FsLab.Formatters.DefaultWhiteTheme
 
 // Background colors
 fsi.HtmlPrinterParameters.["background-color"] <- "transparent"
