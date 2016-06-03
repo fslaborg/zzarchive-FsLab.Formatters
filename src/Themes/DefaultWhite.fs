@@ -1,4 +1,5 @@
 module FsLab.Formatters.DefaultWhiteTheme
+#if HAS_FSI_ADDHTMLPRINTER
 
 // Background colors
 fsi.HtmlPrinterParameters.["background-color"] <- "transparent"
@@ -22,3 +23,5 @@ fsi.HtmlPrinterParameters.["chart-color-palette"] <-
 fsi.HtmlPrinterParameters.["float-format"] <- "G4"        // For example: System.Math.PI.ToString("G4")
 fsi.HtmlPrinterParameters.["grid-row-counts"] <- "8,4"    // no. rows of a grid that appears before & after '...'
 fsi.HtmlPrinterParameters.["grid-column-counts"] <- "3,3" // no. cols of a grid that appears before & after '...'
+
+#endif
