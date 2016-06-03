@@ -301,9 +301,8 @@ let registerLiveGrid colKeys rowCount getRow =
     Writers.setHeader  "Access-Control-Allow-Origin" "*" >=>
     Writers.setHeader "Access-Control-Allow-Headers" "content-type" >=>
     choose [
-      Filters.pathScan "/%d/metadata" (fun _ ->
-          Successful.OK (metadata) )
-      Filters.pathScan "/%d/rows/%d" (fun (_, row) -> request (fun r ->
+      Filters.path "/metadata" >=> Successful.OK (metadata) 
+      Filters.pathScan "/rows/%d" (fun row -> request (fun r ->
           let count = int (Utils.Choice.orDefault "100" (r.queryParam("count")))
           let count = min rowCount (row + count) - row
           let rows =
@@ -313,13 +312,6 @@ let registerLiveGrid colKeys rowCount getRow =
               GridJson.Row(string key, cols).JsonValue)
           JsonValue.Array(rows).ToString()
           |> Successful.OK ))
-      Filters.pathScan "/%d/%s" (fun (n, _) ctx ->
-          let url = ctx.request.url.ToString().Replace("/" + string n + "/", "/")
-          let ctx =
-            { ctx with
-                request = { ctx.request with url = System.Uri(url) }
-                runtime = { ctx.runtime with homeDirectory = __SOURCE_DIRECTORY__ } }
-          Files.browseHome ctx)
     ]
   let url = Server.instance.Value.AddPart(app)
   let id = nextGridId()
