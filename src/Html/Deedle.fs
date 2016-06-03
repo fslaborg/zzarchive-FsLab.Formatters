@@ -16,6 +16,7 @@ open FsLab.Formatters
 // --------------------------------------------------------------------------------------
 
 let gridStyles = """
+<style type="text/css">
   .grid {
     font-size:11pt;
     font-family:@font-family;
@@ -90,13 +91,15 @@ let gridStyles = """
 
   .live-grid table {
     position:absolute;
-  }"""
+  }
+</style>"""
 
 // --------------------------------------------------------------------------------------
 // JavaScript (only when in online mode) that implements lazy loading
 // --------------------------------------------------------------------------------------
 
 let gridLiveScript = """
+<script type="text/javascript">
   function setupGrid(id, viewHeight, serviceUrl) {
 
     // Create table with given column names & specified number of empty rows
@@ -190,7 +193,8 @@ let gridLiveScript = """
     $.ajax({ url: serviceUrl + "/metadata" }).done(function (res) {
       initialize(JSON.parse(res));
     });
-  }"""
+  }
+</script>"""
 
 /// JavaScript that calls the function defined in `gridLiveScript` for a given grid
 let gridLiveScriptCustom id height serviceUrl =
