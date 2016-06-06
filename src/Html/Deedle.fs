@@ -154,9 +154,9 @@ let gridLiveScript = """
         nextUpdate = offset;
         for (var i = 0; i < viewCount; i++) {
           rows[i].tr.show();
-          rows[i].key.html("(" + (offset + i) + ")").addClass("faded");
+          rows[i].key.addClass("faded");
           for (var j = 0; j < rows[i].columns.length; j++)
-            rows[i].columns[j].html("(...)").addClass("faded");
+            rows[i].columns[j].addClass("faded");
         }
 
         $.ajax({ url: serviceUrl + "/rows/" + offset + "?count=" + viewCount }).done(function (res) {
@@ -255,7 +255,7 @@ let mapStepsIndexed (startCount, endCount) g count =
   else
     [ for i in 0 .. count-1 do yield g(Some i) ]
 
-let registerStandaloneGrid colKeys rowCount getRow =
+let registerStandaloneGrid colKeys rowCount getRows =
   let id = nextGridId()
   let frows = Styles.getNumberRange "grid-row-counts"
   let fcols = Styles.getNumberRange "grid-column-counts"
@@ -273,7 +273,7 @@ let registerStandaloneGrid colKeys rowCount getRow =
       // Get row or generate row consisting of ... for all columns
       let rowKey, row =
         match rowIndex with
-        | Some i -> getRow i
+        | Some i -> getRows i 1 |> Seq.head
         | _ -> box "...", colKeys |> Array.map (fun _ -> "...")
 
       // Generate row, using ... for one column if there are too many
@@ -295,7 +295,7 @@ type GridJson = JsonProvider<"""{
     "row":{"key":"Foo","columns":["Foo","Bar"]}
   }""">
 
-let registerLiveGrid colKeys rowCount getRow =
+let registerLiveGrid colKeys rowCount getRows =
   let metadata = GridJson.Metadata(colKeys, rowCount).ToString()
   let app =
     Writers.setHeader  "Access-Control-Allow-Origin" "*" >=>
@@ -306,9 +306,7 @@ let registerLiveGrid colKeys rowCount getRow =
           let count = int (Utils.Choice.orDefault "100" (r.queryParam("count")))
           let count = min rowCount (row + count) - row
           let rows =
-            Array.init count (fun i ->
-              let row = row + i
-              let key, cols = getRow row
+            getRows row count |> Array.map (fun (key, cols) ->
               GridJson.Row(string key, cols).JsonValue)
           JsonValue.Array(rows).ToString()
           |> Successful.OK ))
@@ -338,6 +336,20 @@ let invokeSeriesOperation tys obj (op:ISeriesOperation<'R>) =
   typeof<ISeriesOperation<'R>>.GetMethod("Invoke")
     .MakeGenericMethod(tys).Invoke(op, [| obj |]) :?> 'R
 
+// Helpers for estimating positions inside a BigDeedle frame
+let midKeyFuncs = System.Collections.Generic.Dictionary<System.Type, obj -> obj -> float -> obj>()
+let addMidKeyFunc (f:'T -> 'T -> float -> 'T) =
+  midKeyFuncs.Add(typeof<'T>, fun a b r -> box (f (unbox a) (unbox b) r))
+let midKeyFunc (k1:'T) (k2:'T) ratio : 'T =
+  let f = midKeyFuncs.[typeof<'T>]
+  f k1 k2 ratio |> unbox
+
+// How to calculate middle key for various types
+addMidKeyFunc(fun (dt1:System.DateTimeOffset) (dt2:System.DateTimeOffset) ratio ->
+  dt1 + System.TimeSpan.FromMilliseconds((dt2 - dt1).TotalMilliseconds * ratio))
+
+
+// Register formatters for Deedle objects
 let registerFormattable (obj:IFsiFormattable) =
   let floatFormat = Styles.getStyle "float-format"
   let registerGrid =
@@ -350,22 +362,56 @@ let registerFormattable (obj:IFsiFormattable) =
         member x.Invoke(s) =
           let colKeys = [| "Value" |]
           let rowCount = s.KeyCount
-          let getRow index =
-            box (s.GetKeyAt(index)),
-            [| formatValue floatFormat "N/A" (s.TryGetAt(index)) |]
-          registerGrid colKeys rowCount getRow }
+          let getRows index count =
+            Array.init count (fun i ->
+              let index = index + i
+              box (s.GetKeyAt(index)),
+              [| formatValue floatFormat "N/A" (s.TryGetAt(index)) |] )
+          registerGrid colKeys rowCount getRows }
     |> invokeSeriesOperation tys obj
   | :? IFrame as f ->
     { new IFrameOperation<_> with
         member x.Invoke(df) =
-          let colKeys = df.ColumnKeys |> Seq.map (box >> string) |> Array.ofSeq
-          let rowCount = df.RowCount
-          let getRow index =
-            box (df.GetRowKeyAt(int64 index)),
-            df.GetRowAt(index).Vector.DataSequence
-              |> Seq.map (formatValue floatFormat "N/A")
-              |> Array.ofSeq
-          registerGrid colKeys rowCount getRow }
+          if df.RowIndex.GetType().Name = "VirtualOrderedIndex`1" then
+            // Experimental BigDeedle support (without accessing RowCount)
+            let colKeys = df.ColumnKeys |> Seq.map (box >> string) |> Array.ofSeq
+            let rowCount = 1000000
+            let getRows index count =
+              // Calculate address based on distance from the first to the last key
+              let ratio = float index / 1000000.0
+              let first = df.RowIndex.KeyAt(df.RowIndex.AddressOperations.FirstElement)
+              let last = df.RowIndex.KeyAt(df.RowIndex.AddressOperations.LastElement)
+              let midKey = midKeyFunc first last ratio
+              let midAddr = snd (df.RowIndex.Lookup(midKey, Lookup.ExactOrSmaller, fun _ -> true).Value)
+
+              // Get rows within a range around the estimated location
+              let loKey, hiKey =
+                try
+                  // Try to get the next 10 items (this may be out of range)
+                  df.RowIndex.KeyAt midAddr,
+                  df.RowIndex.KeyAt(df.RowIndex.AddressOperations.AdjustBy(midAddr, int64 (count-1)))
+                with :? System.IndexOutOfRangeException ->
+                  // If it is, try to get the last 10 items (could fail for frames with less than 10 items...)
+                  df.RowIndex.KeyAt(df.RowIndex.AddressOperations.AdjustBy(midAddr, int64 (-count+1))),
+                  df.RowIndex.KeyAt(df.RowIndex.AddressOperations.LastElement)
+
+              let rows = df.Rows.[loKey .. hiKey]
+              [| for (KeyValue(k, v)) in rows.Rows.Observations do
+                  let values = v.Vector.DataSequence |> Seq.map string |> Array.ofSeq
+                  yield box k, values |] |> Array.take count
+            registerLiveGrid colKeys rowCount getRows
+          else
+            // Ordinary small Deedle frame - use precise indexing
+            let colKeys = df.ColumnKeys |> Seq.map (box >> string) |> Array.ofSeq
+            let rowCount = df.RowCount
+            let getRows index count =
+              Array.init count (fun i ->
+                let index = index + i
+                box (df.GetRowKeyAt(int64 index)),
+                df.GetRowAt(index).Vector.DataSequence
+                |> Seq.map (formatValue floatFormat "N/A")
+                |> Array.ofSeq)
+            registerGrid colKeys rowCount getRows }
     |> f.Apply
   | _ -> Seq.empty, "(Error: Deedle object implements IFsiFormattable, but it's not a frame or series)"
 
