@@ -348,6 +348,23 @@ let midKeyFunc (k1:'T) (k2:'T) ratio : 'T =
 addMidKeyFunc(fun (dt1:System.DateTimeOffset) (dt2:System.DateTimeOffset) ratio ->
   dt1 + System.TimeSpan.FromMilliseconds((dt2 - dt1).TotalMilliseconds * ratio))
 
+// Helper for BigDeedle frames, that returns key range within big frame
+// based on a ratio which is a value between 0 and 1
+let getKeyRange (rowIndex:Deedle.Indices.IIndex<_>) count ratio =
+  let first = rowIndex.KeyAt(rowIndex.AddressOperations.FirstElement)
+  let last = rowIndex.KeyAt(rowIndex.AddressOperations.LastElement)
+  let midKey = midKeyFunc first last ratio
+  let midAddr = snd (rowIndex.Lookup(midKey, Lookup.ExactOrSmaller, fun _ -> true).Value)
+
+  // Get rows within a range around the estimated location
+  try
+    // Try to get the next 10 items (this may be out of range)
+    rowIndex.KeyAt midAddr,
+    rowIndex.KeyAt(rowIndex.AddressOperations.AdjustBy(midAddr, int64 (count-1)))
+  with :? System.IndexOutOfRangeException ->
+    // If it is, try to get the last 10 items (could fail for frames with less than 10 items...)
+    rowIndex.KeyAt(rowIndex.AddressOperations.AdjustBy(midAddr, int64 (-count+1))),
+    rowIndex.KeyAt(rowIndex.AddressOperations.LastElement)
 
 // Register formatters for Deedle objects
 let registerFormattable (obj:IFsiFormattable) =
@@ -360,15 +377,28 @@ let registerFormattable (obj:IFsiFormattable) =
   | Series tys ->
     { new ISeriesOperation<_> with
         member x.Invoke(s) =
-          let colKeys = [| "Value" |]
-          let rowCount = s.KeyCount
-          let getRows index count =
-            Array.init count (fun i ->
-              let index = index + i
-              box (s.GetKeyAt(index)),
-              [| formatValue floatFormat "N/A" (s.TryGetAt(index)) |] )
-          registerGrid colKeys rowCount getRows }
+          if s.Index.GetType().Name = "VirtualOrderedIndex`1" then
+            // Experimental BigDeedle support (without accessing RowCount)
+            let colKeys = [| "Value" |]
+            let rowCount = 1000000
+            let getRows index count =
+              let loKey, hiKey = getKeyRange s.Index count (float index / 1000000.0)
+              let partialSeries = s.[loKey .. hiKey]
+              [| for (KeyValue(k, v)) in partialSeries.ObservationsAll do
+                  yield box k, [| formatValue floatFormat "N/A" v |] |] |> Array.take count
+            registerGrid colKeys rowCount getRows
+          else
+            // Ordinary small Deedle series, use precise indexing
+            let colKeys = [| "Value" |]
+            let rowCount = s.KeyCount
+            let getRows index count =
+              Array.init count (fun i ->
+                let index = index + i
+                box (s.GetKeyAt(index)),
+                [| formatValue floatFormat "N/A" (s.TryGetAt(index)) |] )
+            registerGrid colKeys rowCount getRows }
     |> invokeSeriesOperation tys obj
+
   | :? IFrame as f ->
     { new IFrameOperation<_> with
         member x.Invoke(df) =
@@ -377,29 +407,12 @@ let registerFormattable (obj:IFsiFormattable) =
             let colKeys = df.ColumnKeys |> Seq.map (box >> string) |> Array.ofSeq
             let rowCount = 1000000
             let getRows index count =
-              // Calculate address based on distance from the first to the last key
-              let ratio = float index / 1000000.0
-              let first = df.RowIndex.KeyAt(df.RowIndex.AddressOperations.FirstElement)
-              let last = df.RowIndex.KeyAt(df.RowIndex.AddressOperations.LastElement)
-              let midKey = midKeyFunc first last ratio
-              let midAddr = snd (df.RowIndex.Lookup(midKey, Lookup.ExactOrSmaller, fun _ -> true).Value)
-
-              // Get rows within a range around the estimated location
-              let loKey, hiKey =
-                try
-                  // Try to get the next 10 items (this may be out of range)
-                  df.RowIndex.KeyAt midAddr,
-                  df.RowIndex.KeyAt(df.RowIndex.AddressOperations.AdjustBy(midAddr, int64 (count-1)))
-                with :? System.IndexOutOfRangeException ->
-                  // If it is, try to get the last 10 items (could fail for frames with less than 10 items...)
-                  df.RowIndex.KeyAt(df.RowIndex.AddressOperations.AdjustBy(midAddr, int64 (-count+1))),
-                  df.RowIndex.KeyAt(df.RowIndex.AddressOperations.LastElement)
-
+              let loKey, hiKey = getKeyRange df.RowIndex count (float index / 1000000.0)
               let rows = df.Rows.[loKey .. hiKey]
               [| for (KeyValue(k, v)) in rows.Rows.Observations do
                   let values = v.Vector.DataSequence |> Seq.map string |> Array.ofSeq
                   yield box k, values |] |> Array.take count
-            registerLiveGrid colKeys rowCount getRows
+            registerGrid colKeys rowCount getRows
           else
             // Ordinary small Deedle frame - use precise indexing
             let colKeys = df.ColumnKeys |> Seq.map (box >> string) |> Array.ofSeq
