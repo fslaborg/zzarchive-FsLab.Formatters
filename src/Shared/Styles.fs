@@ -24,7 +24,7 @@ let private defaultStyles =
     "font-family", "sans-serif" 
 
     // Grids, matrices and related
-    "float-format", "G4" 
+    "float-format", "F2" 
     "grid-row-counts", "8,4"
     "grid-column-counts", "3,3" ] |> dict
 
