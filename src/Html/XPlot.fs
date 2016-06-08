@@ -51,6 +51,7 @@ let applyTheme (ch:XPlot.GoogleCharts.GoogleChart) =
   <@ opts.chartArea.backgroundColor.fill @> <-- background
   <@ opts.legend.textStyle.color @> <-- textcolor
   <@ opts.titleTextStyle.color @> <-- textcolor
+  <@ opts.datalessRegionColor @> <-- gridlines
   <@ opts.colors @> <-- palette.Split(',')
   ch
 

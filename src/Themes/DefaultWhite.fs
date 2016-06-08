@@ -20,7 +20,7 @@ fsi.HtmlPrinterParameters.["chart-color-palette"] <-
     "#f7b6d2,#7f7f7f,#c7c7c7,#bcbd22,#dbdb8d,#17becf,#9edae5"
 
 // Grids, matrices and related
-fsi.HtmlPrinterParameters.["float-format"] <- "G4"        // For example: System.Math.PI.ToString("G4")
+fsi.HtmlPrinterParameters.["float-format"] <- "F2"        // For example: System.Math.PI.ToString("G4")
 fsi.HtmlPrinterParameters.["grid-row-counts"] <- "8,4"    // no. rows of a grid that appears before & after '...'
 fsi.HtmlPrinterParameters.["grid-column-counts"] <- "3,3" // no. cols of a grid that appears before & after '...'
 
