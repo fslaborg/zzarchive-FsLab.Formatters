@@ -411,7 +411,7 @@ let registerFormattable (obj:IFsiFormattable) =
               let rows = df.Rows.[loKey .. hiKey]
               [| for (KeyValue(k, v)) in rows.Rows.Observations do
                   let values = v.Vector.DataSequence |> Seq.map string |> Array.ofSeq
-                  yield box k, values |] |> Array.truncte count
+                  yield box k, values |] |> Array.truncate count
             registerGrid colKeys rowCount getRows
           else
             // Ordinary small Deedle frame - use precise indexing
