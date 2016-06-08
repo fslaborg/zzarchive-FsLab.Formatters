@@ -385,7 +385,7 @@ let registerFormattable (obj:IFsiFormattable) =
               let loKey, hiKey = getKeyRange s.Index count (float index / 1000000.0)
               let partialSeries = s.[loKey .. hiKey]
               [| for (KeyValue(k, v)) in partialSeries.ObservationsAll do
-                  yield box k, [| formatValue floatFormat "N/A" v |] |] |> Array.take count
+                  yield box k, [| formatValue floatFormat "N/A" v |] |] |> Array.truncate count
             registerGrid colKeys rowCount getRows
           else
             // Ordinary small Deedle series, use precise indexing
@@ -411,7 +411,7 @@ let registerFormattable (obj:IFsiFormattable) =
               let rows = df.Rows.[loKey .. hiKey]
               [| for (KeyValue(k, v)) in rows.Rows.Observations do
                   let values = v.Vector.DataSequence |> Seq.map string |> Array.ofSeq
-                  yield box k, values |] |> Array.take count
+                  yield box k, values |] |> Array.truncte count
             registerGrid colKeys rowCount getRows
           else
             // Ordinary small Deedle frame - use precise indexing
