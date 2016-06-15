@@ -57,6 +57,7 @@
     <Compile Include="Shared/Mock.fs" />
     <Compile Include="Shared/Server.fs" />
     <Compile Include="Shared/Styles.fs" />
+    <Compile Include="Html/MathNet.fs" />
     <Compile Include="Html/Deedle.fs" />
     <Compile Include="Html/XPlot.fs" />
     <Compile Include="Html/Text.fs" />
