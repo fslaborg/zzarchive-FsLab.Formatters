@@ -5,7 +5,7 @@ open FsLab.Formatters
 open Microsoft.FSharp.Quotations
 
 // --------------------------------------------------------------------------------------
-// Formatting for XPlot charts
+// Formatting for Google charts
 // --------------------------------------------------------------------------------------
 
 // Hacky reflection-based mutator that sets chart styles to the default theme
@@ -67,3 +67,39 @@ fsi.AddHtmlPrinter(fun (chart:XPlot.GoogleCharts.GoogleChart) ->
   let ch = chart |> XPlot.GoogleCharts.Chart.WithSize (800, 450) |> applyTheme
   seq [ "script", googleJsapi; "script", googleLoad ], 
   ch.InlineHtml)
+
+
+// --------------------------------------------------------------------------------------
+// Formatting for Plotly charts
+// --------------------------------------------------------------------------------------
+
+open XPlot.Plotly
+
+/// Create default Plotly layout with theme colours
+let defaultLayout () =
+  let gridlines = Styles.getStyle "background-color-highlighted"
+  let background = Styles.getStyle "background-color-alternate"
+  let textcolor = Styles.getStyle "text-color"
+
+  let x = Xaxis(linecolor=gridlines, gridcolor=gridlines, tickfont=Font(color=textcolor))
+  let y = Yaxis(linecolor=gridlines, gridcolor=gridlines, tickfont=Font(color=textcolor))
+  Layout
+    ( plot_bgcolor=background, paper_bgcolor="transparent",
+      xaxis=x, yaxis=y, legend=Legend(font=Font(color=textcolor)) )
+
+/// Resize the iframe when plotly chart is loaded
+let plotlyLoadScript = """<script type="text/javascript">
+  $(function() { 
+    if (window.fsiResizeContent) 
+      window.fsiResizeContent($("body").height() + 10); 
+  });
+</script>"""
+
+/// Reference Plotly.js via a CDN
+let plotlyCdn = 
+  "<script src='https://cdn.plot.ly/plotly-latest.min.js'></script>"
+
+fsi.AddHtmlPrinter(fun (ch:PlotlyChart) ->
+  ch.WithLayout(defaultLayout())
+  seq [ "script", plotlyCdn; "script", plotlyLoadScript ],
+  ch.GetInlineHtml() )

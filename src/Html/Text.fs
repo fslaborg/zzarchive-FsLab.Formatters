@@ -17,7 +17,7 @@ fsi.AddPrinter(fun (printer:Deedle.Internal.IFsiFormattable) ->
   "(Deedle Object)" )
 
 fsi.AddPrinter(fun (ch:FSharp.Charting.ChartTypes.GenericChart) ->
-  ch.ShowChart() |> ignore; "(Chart)")
+  "(F# Chart)")
 
 fsi.AddPrinter(fun (synexpr:RDotNet.SymbolicExpression) ->
   synexpr.Print())
