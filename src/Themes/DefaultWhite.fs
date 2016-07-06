@@ -20,8 +20,12 @@ fsi.HtmlPrinterParameters.["chart-color-palette"] <-
     "#f7b6d2,#7f7f7f,#c7c7c7,#bcbd22,#dbdb8d,#17becf,#9edae5"
 
 // Grids, matrices and related
-fsi.HtmlPrinterParameters.["float-format"] <- "F2"        // For example: System.Math.PI.ToString("G4")
-fsi.HtmlPrinterParameters.["grid-row-counts"] <- "8,4"    // no. rows of a grid that appears before & after '...'
-fsi.HtmlPrinterParameters.["grid-column-counts"] <- "3,3" // no. cols of a grid that appears before & after '...'
+fsi.HtmlPrinterParameters.["math-float-format"] <- "G2"     // Used in math, e.g. (123456.1234).ToString("G4")
+fsi.HtmlPrinterParameters.["table-float-format"] <- "F2"    // Used in tables, e.g. (123456.1234).ToString("F4")
+fsi.HtmlPrinterParameters.["grid-row-counts"] <- "8,4"      // no. rows of a grid that appears before & after '...'
+fsi.HtmlPrinterParameters.["grid-column-counts"] <- "3,3"   // no. cols of a grid that appears before & after '...'
+fsi.HtmlPrinterParameters.["vector-item-counts"] <- "6,3"   // no. items of a Math.NET vector
+fsi.HtmlPrinterParameters.["matrix-column-counts"] <- "6,3" // no. columns of a Math.NET matrix
+fsi.HtmlPrinterParameters.["matrix-row-counts"] <- "10,4"   // no. rows of a Math.NET matrix
 
 #endif

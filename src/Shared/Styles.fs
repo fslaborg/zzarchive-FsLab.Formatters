@@ -24,7 +24,11 @@ let private defaultStyles =
     "font-family", "sans-serif" 
 
     // Grids, matrices and related
-    "float-format", "F2" 
+    "table-float-format", "F2"
+    "math-float-format", "G2"
+    "vector-item-counts", "6,3"
+    "matrix-column-counts", "6,3"
+    "matrix-row-counts", "10,4"
     "grid-row-counts", "8,4"
     "grid-column-counts", "3,3" ] |> dict
 
@@ -35,7 +39,7 @@ let getStyle key =
   match fsi.HtmlPrinterParameters.TryGetValue(key), defaultStyles.TryGetValue(key) with
   | (true, (:? string as s)), _ 
   | _, (true, s) -> s
-  | _ -> failwith "Color not available"
+  | _ -> failwithf "Style '%s' not available" key
 
 /// Replace '@name' with value for all known styles
 let replaceStyles style = 

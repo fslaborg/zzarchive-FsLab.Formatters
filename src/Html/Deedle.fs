@@ -368,7 +368,7 @@ let getKeyRange (rowIndex:Deedle.Indices.IIndex<_>) count ratio =
 
 // Register formatters for Deedle objects
 let registerFormattable (obj:IFsiFormattable) =
-  let floatFormat = Styles.getStyle "float-format"
+  let floatFormat = Styles.getStyle "table-float-format"
   let registerGrid =
     if Styles.standaloneHtmlOutput() then registerStandaloneGrid
     else registerLiveGrid
