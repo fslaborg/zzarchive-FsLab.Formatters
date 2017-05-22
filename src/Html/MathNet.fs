@@ -65,7 +65,7 @@ let mathJaxConfig = """
 
 /// MathJax script - points to the latest version on CDN
 let mathJaxScript = """
-  <script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>"""
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>"""
 
 /// MathJax load script - resizes Atom window after Math is formatted
 let mathJaxLoadScript = """
